@@ -8,43 +8,81 @@
 
 //A0 - 14, A3 - 17
 volatile int score = 0;
+int number = 0;
 
 int scorePin = 4;
 int ledOne = 4;
 bool ButtonLast[2] = {false, false};
-int massiveLeftPin[] = {-24, -20, -16, -12, -8, -4, 0};
+int massiveLeftPin[] = {0, -4, -8, -12, -16, -20, -24};
 int massiveRightPin[] = {0, 4, 8, 12, 16, 20, 24};
 void setup()
 {
-  //Serial.begin(9600);
   for (int i = 0; i < BAR_COUNT; ++i){
     pinMode(i + FIRST_LEFT_PIN, OUTPUT); }
   pinMode(Red, OUTPUT);
   pinMode(Blue, OUTPUT);
   pinMode(Green, OUTPUT);
+  //Serial.begin(9600);
   attachInterrupt(INT0, pushP1, FALLING);
   attachInterrupt(INT1, pushP2, FALLING);
 }
-void pushP1() { ++score; }
-void pushP2() { --score; }
+bool FlagStart = false;
+void pushP1() {
+  //Serial.print("+ - ");
+  //Serial.print(score);
+  //Serial.print("/");
+  //Serial.println(number);
+  if (number == -1 && score == 0) {
+  	FlagStart = true;
+  }
+  if (FlagStart == true) {
+  	FlagStart = false;
+    score += 2;
+  }
+  else score++;
+  
+  if (score == 4) {
+    number++; 
+    score = 0;
+   }
+  //Serial.println(score);
+}
+void pushP2() {
+  if (number == 1 && score == 0) {
+  	FlagStart = true;
+  }
+  if (FlagStart == false) {
+  	FlagStart = true;
+    score -= 2;
+  }
+  else score--;
+  if (score == -4) {
+    number--; 
+    score = 0;
+  }
+  //Serial.println(score);
+  //Serial.println(number);
+}
 
 void loop(){
   digitalWrite(Green, HIGH);
   delay(1000);
   digitalWrite(Green, LOW);
-  while (abs(score) < MAX_SCORE) {
-    for (int i = 0; i < 7; ++i) {
-    	if (massiveLeftPin[i] >= score)
-          digitalWrite(i + FIRST_LEFT_PIN, HIGH);
-        else digitalWrite(i + FIRST_LEFT_PIN, LOW);
+  while (abs(number) < 7) {
+    for (int i = 0; i < 7; i++) {
+        if (i <= abs(number) && number <= 0) {
+      		digitalWrite(FIRST_LEFT_PIN + i, HIGH);
+        }
+        else digitalWrite(FIRST_LEFT_PIN + i, LOW);
     }
     for (int i = 0; i < 7; i++) {
-        if (massiveRightPin[i] <= score)
-          digitalWrite(i + FIRST_RIGHT_PIN, HIGH);
-        else digitalWrite(i + FIRST_RIGHT_PIN, LOW);
+        if (i <= number && number >= 0) {
+      		digitalWrite(FIRST_RIGHT_PIN + i, HIGH);
+        }
+        else digitalWrite(FIRST_RIGHT_PIN + i, LOW);
     }
   }
-  if (score < 0) digitalWrite(Red, HIGH);
+  if (number < 0) digitalWrite(Red, HIGH);
   else digitalWrite(Blue, HIGH);
   while (true) {}
 }
